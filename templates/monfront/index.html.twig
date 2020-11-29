@@ -1,0 +1,173 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bonjour!{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+</style>
+
+<div class="example-wrapper">
+    <h1>Bonjour ✅</h1>
+	<h1>La saisie des dates lors de la modification et la création est au format 'Y-m-d' </h1>
+	<span id="message_popup"></span>
+	<div id="zone_centrale">
+	</div>
+</div>
+
+{% endblock %}
+{% block javascripts %}
+<script>
+		$.ajax({
+			url : './api/evenement',
+			type : 'GET', 
+			dataType : 'json',
+			success : function(response, statut){
+
+				var html='<table id="even"><tr><th>date_debut</th><th>date_fin</th><th>nombre_inscrits</th><th>id</th><th colspan="2">#</th></tr>';
+
+				for(var i=0;i<response.length;i++){
+					html=html+'<tr>';
+						html=html+'<td><input class="date_debut" value="'+response[i].dateDebut+'"></input></td>';
+						html=html+'<td><input class="date_fin" value="'+response[i].dateFin+'"></input>';
+						html=html+'</td><td><input class="nombre_inscrits" value="'+response[i].nombre_inscrits+'"></input></td>';
+						html=html+'<td><input class="id" value="'+response[i].id+'" disabled></input></td>';
+						html=html+'<td><span colspan="2" class="modifier">[modifier]</span><span class="supprimer">[supprimer]</span><span class="inscrire">[inscrire]</span></td>';
+						html=html+'</tr>';
+						
+					html=html+'<tr id="id_'+response[i].id+'" style="display: none;">';
+						html=html+'<td><input class="nom" placeholder="nom"></input></td>';
+						html=html+'<td><input class="prenom" placeholder="prenom"></input></td>';
+						html=html+'<td><input class="email" placeholder="email"></input></td>';
+						html=html+'<td><input class="num_tel" placeholder="num_tel"></input></td>';
+						html=html+'<td><input class="id_evenement" value="'+response[i].id+'" disabled></input></td>';
+						html=html+'<td><span class="soumettre">[soumettre]</span><span class="quitter">[quitter]</span></td>';
+					html=html+'</tr>';
+				}
+				html=html+'<tr>'
+					html=html+'<td><input class="date_debut" ></input></td>';
+					html=html+'<td><input class="date_fin " ></input>';
+					html=html+'</td><td><input class="nombre_inscrits" ></input></td>';
+					html=html+'<td colspan="3"><span class="creer" id="creer">[creer]</span></td>';
+				html=html+'</tr>';
+
+				html=html+'</table>';
+				$("#zone_centrale").html(html);
+
+				$("#creer").click(function(){
+					var ligne=$(this).parent().parent();
+					var date_debut=ligne.find(".date_debut")[0].value;
+					var date_fin=ligne.find(".date_fin")[0].value;
+					var nombre_inscrits= parseInt(ligne.find(".nombre_inscrits")[0].value);
+
+					var even = {date_debut:date_debut,date_fin:date_fin,nombre_inscrits:nombre_inscrits};
+
+					$.ajax({
+						url : './api/evenement',
+						type : 'POST', 
+						data : JSON.stringify(even),
+						dataType : 'json',
+						success : function(response, statut){
+							document.location.reload();
+						},
+						error : function(resultat, statut, erreur){
+							$("#message_popup").html('<div class="alert alert-primary" role="alert">'+resultat+'</div>');
+						}
+					});
+				});
+
+				$(".modifier").click(function(){
+					var ligne=$(this).parent().parent();
+					var date_debut=ligne.find(".date_debut")[0].value;
+					var date_fin=ligne.find(".date_fin")[0].value;
+					var nombre_inscrits= parseInt(ligne.find(".nombre_inscrits")[0].value);
+					var id= parseInt(ligne.find(".id")[0].value);
+
+					var even = {date_debut:date_debut,date_fin:date_fin,nombre_inscrits:nombre_inscrits,id:id};
+
+					$.ajax({
+						url : './api/evenement',
+						type : 'PUT', 
+						data : JSON.stringify(even),
+						dataType : 'json',
+						success : function(response, statut){
+							document.location.reload();
+							console.log("take your shot");
+						},
+						error : function(resultat, statut, erreur){
+							$("#message_popup").html('<div class="alert alert-primary" role="alert">'+resultat+'</div>');
+						}
+					});
+				});
+
+				$(".supprimer").click(function(){
+					var ligne=$(this).parent().parent();
+					var date_debut=ligne.find(".date_debut")[0].value;
+					var date_fin=ligne.find(".date_fin")[0].value;
+					var nombre_inscrits= parseInt(ligne.find(".nombre_inscrits")[0].value);
+					var id= parseInt(ligne.find(".id")[0].value);
+
+					var even = {date_debut:date_debut,date_fin:date_fin,nombre_inscrits:nombre_inscrits,id:id};
+
+					$.ajax({
+						url : './api/evenement',
+						type : 'DELETE', 
+						data : JSON.stringify(even),
+						dataType : 'json',
+						success : function(response, statut){
+							document.location.reload();
+						},
+						error : function(resultat, statut, erreur){
+							$("#message_popup").html('<div class="alert alert-primary" role="alert">'+resultat+'</div>');
+						}
+					});
+				});
+
+
+				$(".inscrire").click(function(){
+					var ligne=$(this).parent().parent();
+					var id= ligne.find(".id")[0].value;
+					$("#id_"+id).show();
+				});
+
+				$(".quitter").click(function(){
+					var ligne=$(this).parent().parent();
+					var id= ligne.find(".id_evenement")[0].value;
+					$("#id_"+id).hide();
+				});
+
+
+				$(".soumettre").click(function(){
+					var ligne=$(this).parent().parent();
+					var nom=ligne.find(".nom")[0].value;
+					var prenom=ligne.find(".prenom")[0].value;
+					var email=ligne.find(".email")[0].value;
+					var num_tel=ligne.find(".num_tel")[0].value;
+					var id_evenement= parseInt(ligne.find(".id_evenement")[0].value);
+
+					var inscri = {nom:nom,prenom:prenom,email:email,num_tel:num_tel,id_evenement:id_evenement};
+
+					$.ajax({
+						url : './api/inscription',
+						type : 'POST', 
+						data : JSON.stringify(inscri),
+						dataType : 'json',
+						success : function(response, statut){
+							document.location.reload();
+						},
+						error : function(resultat, statut, erreur){
+							$("#message_popup").html('<div class="alert alert-primary" role="alert">'+resultat.responseText+'</div>');
+						}
+					});
+				});
+
+			},
+			error : function(resultat, statut, erreur){
+				$("#zone_message").html('<div class="alert alert-primary" role="alert">'+resultat+'</div>');
+			}
+		});
+
+		
+</script>
+{% endblock %}
